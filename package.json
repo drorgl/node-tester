@@ -1,0 +1,15 @@
+{
+  "name": "tester",
+  "url" : "https://github.com/drorgl/node-tester",
+  "author": "Dror Gluska",
+  "license" : "MIT",
+  "version": "0.0.1",
+  "scripts": {
+	"configure" : "node-gyp configure",
+    "install": "node-gyp configure; node-gyp build"
+  },
+  "dependencies": {
+    "nan": "^2.4.0",
+    "node-gyp": ">= 0.9.6"
+  }
+}

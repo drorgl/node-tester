@@ -414,6 +414,14 @@ public:
 		}
 	}
 
+	static NAN_METHOD(base_class::TestMemberFunction) {
+		return test(info);
+	}
+
+	static NAN_METHOD(base_class::TestStaticFunction) {
+		return test(info);
+	}
+
 	//static NAN_METHOD(base_class::FindInstanceInPrototypeChain) {
 		
 		
@@ -444,6 +452,9 @@ public:
 		ctor->SetClassName(Nan::New("base_class").ToLocalChecked());
 
 		Nan::SetMethod(ctor, "InstanceOf", InstanceOf);
+
+		Nan::SetMethod(ctor, "test_static_function", TestStaticFunction);
+		Nan::SetPrototypeMethod(ctor, "test_member_function", TestMemberFunction);
 		//Nan::SetMethod(ctor, "FindInstanceInPrototypeChain", FindInstanceInPrototypeChain);
 
 		target->Set(Nan::New("base_class").ToLocalChecked(), ctor->GetFunction());

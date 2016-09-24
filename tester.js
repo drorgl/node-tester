@@ -64,6 +64,15 @@ if (addon == null){
 //
 //console.log("addon.test(cc)",JSON.stringify(addon.test(cc), null, "\t") );
 //
-//console.log("addon.test(addon.base_class)",JSON.stringify(addon.test(addon.base_class), null, "\t"));
+
+
+//console.log("addon.test(addon.base_class)", JSON.stringify(addon.test(addon.base_class), null, "\t"));
 //
+//var bc = new addon.base_class();
+//
+//console.log("addon.test(addon.base_class.test_member_function)", JSON.stringify(bc.test_member_function(), null, "\t"));
+//
+//console.log("addon.test(addon.base_class.test_static_function)", JSON.stringify(addon.base_class.test_static_function(), null, "\t"));
+////
 //console.log("addon.test(function () { alert(\"x\");})",JSON.stringify(addon.test(function () { alert("x");}), null, "\t"));
+

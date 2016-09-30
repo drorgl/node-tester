@@ -5,7 +5,7 @@
 using namespace v8;
 
 void dumpValue(v8::Local<v8::Object> into, v8::Local<v8::Value> val,bool nesting);
-void dumpObject(v8::Local<v8::Object> into, v8::Local<v8::Object> obj, bool nesting);
+void dumpObject(v8::Local<v8::Object> into, v8::Local<v8::Object> obj);
 void dumpFunction(v8::Local<v8::Object> into, v8::Local<v8::Function> func);
 void dumpScriptOrigin(v8::Local<v8::Object> into, ScriptOrigin scro);
 void dumpScriptOriginOptions(v8::Local<v8::Object> into, v8::ScriptOriginOptions & soo);
@@ -56,7 +56,7 @@ void dumpValue(v8::Local<v8::Object> into, v8::Local<v8::Value> val, bool nestin
 
 	into->Set(Nan::New("IsObject").ToLocalChecked(), Nan::New(val->IsObject()));
 	if (nesting && val->IsObject()) {
-		dumpObject(into, val.As<v8::Object>(),true);
+		dumpObject(into, val.As<v8::Object>());
 	}
 
 	into->Set(Nan::New("IsBoolean").ToLocalChecked(), Nan::New(val->IsBoolean()));
@@ -160,7 +160,7 @@ void dumpValue(v8::Local<v8::Object> into, v8::Local<v8::Value> val, bool nestin
 
 }
 
-void dumpObject(v8::Local<v8::Object> into, v8::Local<v8::Object> obj, bool nesting = true) {
+void dumpObject(v8::Local<v8::Object> into, v8::Local<v8::Object> obj) {
 	auto propertyNames = obj->GetOwnPropertyNames();
 	auto arrInto = Nan::New<v8::Array>();
 	
@@ -168,18 +168,21 @@ void dumpObject(v8::Local<v8::Object> into, v8::Local<v8::Object> obj, bool nest
 	dumpArray(arrInto, propertyNames);
 
 	
-	into->Set(Nan::New("GetConstructorName").ToLocalChecked(), obj->GetConstructorName());
-	into->Set(Nan::New("InternalFieldCount").ToLocalChecked(), Nan::New(obj->InternalFieldCount()));
-	into->Set(Nan::New("HasNamedLookupInterceptor").ToLocalChecked(), Nan::New(obj->HasNamedLookupInterceptor()));
-	into->Set(Nan::New("HasIndexedLookupInterceptor").ToLocalChecked(), Nan::New(obj->HasIndexedLookupInterceptor()));
-	into->Set(Nan::New("GetIdentityHash").ToLocalChecked(), Nan::New(obj->GetIdentityHash()));
-	into->Set(Nan::New("IsCallable").ToLocalChecked(), Nan::New(obj->IsCallable()));
+	auto constructorName = obj->GetConstructorName();
 
-	if (nesting) {
-	//if (*Nan::Utf8String( obj->GetConstructorName()) != "Object"){
+	//if object constructor name is Object, it means we reached the end of the prototype chain
+	if (std::string(*Nan::Utf8String(constructorName)) != "Object") {
+
+		into->Set(Nan::New("GetConstructorName").ToLocalChecked(), constructorName);
+		into->Set(Nan::New("InternalFieldCount").ToLocalChecked(), Nan::New(obj->InternalFieldCount()));
+		into->Set(Nan::New("HasNamedLookupInterceptor").ToLocalChecked(), Nan::New(obj->HasNamedLookupInterceptor()));
+		into->Set(Nan::New("HasIndexedLookupInterceptor").ToLocalChecked(), Nan::New(obj->HasIndexedLookupInterceptor()));
+		into->Set(Nan::New("GetIdentityHash").ToLocalChecked(), Nan::New(obj->GetIdentityHash()));
+		into->Set(Nan::New("IsCallable").ToLocalChecked(), Nan::New(obj->IsCallable()));
+
 		auto proto = Nan::New<v8::Object>();
 		dumpValue(proto, obj->GetPrototype(), false);
-		dumpObject(proto, obj->GetPrototype()->ToObject(), false);
+		dumpObject(proto, obj->GetPrototype()->ToObject());
 		into->Set(Nan::New("GetPrototype").ToLocalChecked(), proto);
 	}
 
@@ -517,10 +520,69 @@ public:
 
 Nan::Persistent<FunctionTemplate> child_class::constructor;
 
+
+
+class child_child_class : public Nan::ObjectWrap {
+public:
+	static NAN_METHOD(child_child_class::New) {
+
+		child_child_class *cls = NULL;
+
+		cls = new child_child_class();
+
+		cls->Wrap(info.Holder());
+		info.GetReturnValue().Set(info.Holder());
+	}
+
+
+
+	static Nan::Persistent<FunctionTemplate> child_child_class::constructor;
+
+	static NAN_METHOD(child_child_class::InstanceOf) {
+		//Handle<Object>::Cast(info[0])->FindInstanceInPrototypeChain(Nan::New(child_class::constructor))
+
+
+		auto ft = Nan::New(constructor);
+		/*Handle<Object>::Cast(ft)->FindInstanceInPrototypeChain(child_class:constructor);
+		Handle<Object>::Cast(info[0])->FindInstanceInPrototypeChain		(child_class:constructor)*/
+
+		if (ft->HasInstance(info[0])) {
+			info.GetReturnValue().Set(Nan::New(true));
+		}
+		else {
+			info.GetReturnValue().Set(Nan::New(false));
+		}
+	}
+
+	static void Init(Handle<Object> target) {
+		//Class
+		Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(child_child_class::New);
+		constructor.Reset(ctor);
+		ctor->InstanceTemplate()->SetInternalFieldCount(1);
+		ctor->SetClassName(Nan::New("child_child_class").ToLocalChecked());
+
+		ctor->Inherit(Nan::New(child_class::constructor));
+
+		Nan::SetMethod(ctor, "InstanceOf", InstanceOf);
+
+
+		target->Set(Nan::New("child_child_class").ToLocalChecked(), ctor->GetFunction());
+	}
+
+
+
+
+};
+
+Nan::Persistent<FunctionTemplate> child_child_class::constructor;
+
+
+
 void init(Handle<Object> target) {
 	Nan::SetMethod(target, "test", test);
 	base_class::Init(target);
 	child_class::Init(target);
+	child_child_class::Init(target);
 }
 
 NODE_MODULE(hello, init);

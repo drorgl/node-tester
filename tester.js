@@ -29,9 +29,14 @@ if (addon == null){
 
 
 
-//console.log("addon.test()", addon.test());
+//console.log("addon.test()", JSON.stringify(addon.test(), null, "\t"));
 //
 //console.log("addon.test(1)", addon.test(1));
+//console.log("addon.test('1')", addon.test('1'));
+//console.log("addon.test('1.x')", addon.test('1.x'));
+//console.log("addon.test(1)", addon.test(1.0));
+//
+//console.log("addon.test(1.1)", addon.test(1.1));
 //
 //console.log("addon.test(\"hello\")", addon.test("hello"));
 //
@@ -42,8 +47,7 @@ if (addon == null){
 //console.log("addon.test(console.log)", addon.test(console.log));
 //
 //console.log("addon.test(new Buffer(0))", addon.test(new Buffer(0)));
-//
-//console.log("addon.test(1.1)", addon.test(1.1));
+
 //
 //console.log("addon.test(9223372036854775807)", addon.test(9223372036854775807));
 //
@@ -51,7 +55,12 @@ if (addon == null){
 //var bc = new addon.base_class();
 //console.log("new addon.base_class()", bc);
 //var cc = new addon.child_class();
-//console.log("new addon.child_class()", cc);
+//console.log("new addon.child_class()", JSON.stringify(addon.test(cc), null, "\t"));
+
+//var ccc = new addon.child_child_class();
+//console.log("new addon.child_child_class()", JSON.stringify(addon.test(ccc), null, "\t"));
+
+
 //
 //console.log("bc instanceof base_class",addon.base_class.InstanceOf(bc));
 //console.log("cc instanceof base_class",addon.base_class.InstanceOf(cc));

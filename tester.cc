@@ -357,15 +357,14 @@ void dumpDate(v8::Local<v8::Object> into, v8::Local<v8::Date> date) {
 	into->Set(Nan::New("ValueOf").ToLocalChecked(), Nan::New(date->ValueOf()));
 }
 
-
-NAN_METHOD(test) {
+v8::Local<v8::Object> dumpInfo(Nan::NAN_METHOD_ARGS_TYPE info) {
 	auto retval = Nan::New<v8::Object>();
-	retval->Set(Nan::New("Length").ToLocalChecked(),Nan::New( info.Length()));
+	retval->Set(Nan::New("Length").ToLocalChecked(), Nan::New(info.Length()));
 	retval->Set(Nan::New("Data").ToLocalChecked(), info.Data());
 
 	auto callObj = Nan::New<v8::Object>();
 	dumpValue(callObj, info.Callee());
-	retval->Set(Nan::New("Callee").ToLocalChecked(),callObj);
+	retval->Set(Nan::New("Callee").ToLocalChecked(), callObj);
 
 	retval->Set(Nan::New("IsConstructCall").ToLocalChecked(), Nan::New(info.IsConstructCall()));
 
@@ -381,14 +380,18 @@ NAN_METHOD(test) {
 		infoArray->Set(i, infoObj);
 		dumpValue(infoObj, info[i]);
 
-			//missing in node 6.5 lib
-	//		//infoObj->Set(Nan::New("IsFloat32x4").ToLocalChecked(),Nan::New( info[i]->IsFloat32x4()));
-		
-			//not working on string
-	//		infoObj->Set(Nan::New("ToArrayIndex").ToLocalChecked(), (info[i]->ToArrayIndex()));
+		//missing in node 6.5 lib
+		//		//infoObj->Set(Nan::New("IsFloat32x4").ToLocalChecked(),Nan::New( info[i]->IsFloat32x4()));
+
+		//not working on string
+		//		infoObj->Set(Nan::New("ToArrayIndex").ToLocalChecked(), (info[i]->ToArrayIndex()));
 
 	}
+	return retval;
+}
 
+NAN_METHOD(test) {
+	auto retval = dumpInfo(info);
 
 	info.GetReturnValue().Set(retval);
 }
@@ -396,12 +399,15 @@ NAN_METHOD(test) {
 
 
 class base_class : public Nan::ObjectWrap {
+private:
+	Nan::Persistent<v8::Object> _temp;
+
 public:
 	static NAN_METHOD(base_class::New) {
-
 		base_class *cls = NULL;
 
 		cls = new base_class();
+		cls->_temp.Reset(dumpInfo(info));
 
 		cls->Wrap(info.Holder());
 		info.GetReturnValue().Set(info.Holder());
@@ -423,6 +429,12 @@ public:
 
 	static NAN_METHOD(base_class::TestStaticFunction) {
 		return test(info);
+	}
+
+	static NAN_METHOD(base_class::DumpTemp) {
+		base_class * obj = Nan::ObjectWrap::Unwrap<base_class>(info.Holder());
+		auto retval = Nan::New(obj->_temp);
+		info.GetReturnValue().Set(retval);
 	}
 
 	//static NAN_METHOD(base_class::FindInstanceInPrototypeChain) {
@@ -458,6 +470,8 @@ public:
 
 		Nan::SetMethod(ctor, "test_static_function", TestStaticFunction);
 		Nan::SetPrototypeMethod(ctor, "test_member_function", TestMemberFunction);
+
+		Nan::SetPrototypeMethod(ctor, "dump_temp", DumpTemp);
 		//Nan::SetMethod(ctor, "FindInstanceInPrototypeChain", FindInstanceInPrototypeChain);
 
 		target->Set(Nan::New("base_class").ToLocalChecked(), ctor->GetFunction());

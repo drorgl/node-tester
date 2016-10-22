@@ -85,3 +85,5 @@ if (addon == null){
 ////
 //console.log("addon.test(function () { alert(\"x\");})",JSON.stringify(addon.test(function () { alert("x");}), null, "\t"));
 
+//var bc = new addon.base_class();
+//console.log("new addon.base_class()", JSON.stringify(bc.dump_temp(), null, "\t"));
